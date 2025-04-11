@@ -8,7 +8,7 @@ Tag must adhere to naming convention of distributed files. For example, the tag
 
 USAGE
 
-    $ python .github/validate-release-version.py libraries/dagster_datacontract-delta/dist dagster_datacontract-0.1.3
+    $ python .github/validate-release-version.py libraries/dagster_datacontract/dist dagster_datacontract-0.1.3
 
 """
 
