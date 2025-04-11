@@ -23,6 +23,7 @@ class DataContractLoader:
         )
         self.metadata = self._load_metadata()
         self.tags = self._load_tags()
+        self.description = self.load_description()
         self.owner = self._load_owner()
         self.version = self._load_version()
         self.cron_schedule = self._load_cron_schedule()
