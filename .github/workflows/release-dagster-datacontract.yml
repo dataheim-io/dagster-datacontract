@@ -3,7 +3,7 @@ name: build-and-release-dagster-datacontract
 on:
   push:
     tags:
-      - 'dagster_datacontract-*.*.*'
+      - 'v*.*.*'
 
 jobs:
   build-and-release-dagster-datacontract:
