@@ -10,6 +10,6 @@ jobs:
     uses: ./.github/workflows/template-release.yml
     with:
       library_name: dagster-datacontract
-      working_directory: ./dagster_datacontract
+      working_directory: .
     secrets:
       pypi_token: ${{ secrets.PYPI_TOKEN }}
