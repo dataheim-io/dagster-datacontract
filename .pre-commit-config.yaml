@@ -1,0 +1,22 @@
+exclude: |
+  (?x)(
+      ^.venv/
+      | ^venv/
+  )
+
+repos:
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.6.13
+    hooks:
+      - id: uv-lock
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.4
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+        types_or: [ python, pyi ]
+        require_serial: true
+      - id: ruff-format
+        types_or: [ python, pyi ]
+        require_serial: true
