@@ -1,0 +1,15 @@
+name: build-and-release-dagster-datacontract
+
+on:
+  push:
+    tags:
+      - 'dagster_datacontract-*.*.*'
+
+jobs:
+  build-and-release-dagster-delta:
+    uses: ./.github/workflows/template-release.yml
+    with:
+      library_name: dagster-datacontract
+      working_directory: ./libraries/dagster-delta
+    secrets:
+      pypi_token: ${{ secrets.PYPI_TOKEN }}
