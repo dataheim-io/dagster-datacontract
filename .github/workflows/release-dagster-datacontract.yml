@@ -6,10 +6,10 @@ on:
       - 'dagster_datacontract-*.*.*'
 
 jobs:
-  build-and-release-dagster-delta:
+  build-and-release-dagster-datacontract:
     uses: ./.github/workflows/template-release.yml
     with:
       library_name: dagster-datacontract
-      working_directory: ./libraries/dagster-delta
+      working_directory: ./dagster_datacontract
     secrets:
       pypi_token: ${{ secrets.PYPI_TOKEN }}
