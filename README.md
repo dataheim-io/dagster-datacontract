@@ -39,7 +39,7 @@ data_contract = DataContractLoader(
     name=asset_name,
     metadata=data_contract.metadata,
     tags=data_contract.tags,
-    description=data_contract.description,
+    description=data_contract.load_description(),
     owners=data_contract.owner,
     code_version=data_contract.version,
 )
