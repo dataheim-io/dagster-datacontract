@@ -1,4 +1,5 @@
 import json
+import re
 import textwrap
 from datetime import timedelta
 from typing import Any
@@ -7,6 +8,7 @@ import dagster as dg
 from dagster import TableColumnLineage, TableSchema
 from datacontract.data_contract import DataContract
 from datacontract.model.run import ResultEnum
+from loguru import logger
 
 
 class DataContractLoader:
@@ -67,12 +69,24 @@ class DataContractLoader:
         }
 
     def _load_tags(self) -> dict[str, str]:
-        tags = {
-            item.split(":")[0].strip(): item.split(":")[1].strip()
-            if ":" in item
-            else ""
-            for item in self.data_contract_specification.tags
-        }
+        """Safely load tags from data contract.
+
+        More information about Dagster tags:
+        https://docs.dagster.io/guides/build/assets/metadata-and-tags/tags
+        """
+        tags = {}
+        pattern = re.compile(r"^[\w.-]{1,63}$")
+
+        for item in self.data_contract_specification.tags:
+            if ":" in item:
+                key, val = map(str.strip, item.split(":", 1))
+            else:
+                key, val = item.strip(), ""
+
+            if pattern.match(key) and pattern.match(val):
+                tags[key] = val
+            else:
+                logger.warning(f"Ignoring invalid tag: {item}")
 
         return tags
 
