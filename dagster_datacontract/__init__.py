@@ -74,8 +74,10 @@ class DataContractLoader:
         More information about Dagster tags:
         https://docs.dagster.io/guides/build/assets/metadata-and-tags/tags
         """
+        key_pattern = re.compile(r"^[\w.-]{1,63}$")
+        val_pattern = re.compile(r"^[\w.-]{0,63}$")
+
         tags = {}
-        pattern = re.compile(r"^[\w.-]{1,63}$")
 
         for item in self.data_contract_specification.tags:
             if ":" in item:
@@ -83,7 +85,7 @@ class DataContractLoader:
             else:
                 key, val = item.strip(), ""
 
-            if pattern.match(key) and pattern.match(val):
+            if key_pattern.match(key) and val_pattern.match(val):
                 tags[key] = val
             else:
                 logger.warning(f"Ignoring invalid tag: {item}")
