@@ -33,13 +33,13 @@ models:
         type: timestamp_ntz
         description: "Date and time when the trip ended at the drop-off location."
       passenger_count:
-        type: long
+        type: bigint
         description: "The number of passengers in the vehicle. This is a driver-entered value."
       trip_distance:
         type: double
         description: "The total distance of the trip in miles."
       RatecodeID:
-        type: long
+        type: bigint
         description: "The final rate code in effect at the end of the trip. This indicates the rate type applied."
       store_and_fwd_flag:
         type: string
@@ -51,7 +51,7 @@ models:
         type: integer
         description: "TLC Taxi Zone ID where the passenger was dropped off."
       payment_type:
-        type: long
+        type: bigint
         description: "A numeric code representing the payment method used (e.g., credit card, cash)."
         tags:
           - credit-card
