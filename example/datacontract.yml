@@ -51,6 +51,9 @@ models:
       payment_type:
         type: long
         description: "A numeric code representing the payment method used (e.g., credit card, cash)."
+        tags:
+          - credit-card
+          - cash
       fare_amount:
         type: double
         description: "The base fare charged for the trip."
