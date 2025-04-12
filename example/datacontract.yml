@@ -24,6 +24,8 @@ models:
       VendorID:
         type: integer
         description: "A code indicating the taxi company or technology provider associated with the trip."
+        required: true
+        unique: false
       tpep_pickup_datetime:
         type: timestamp_ntz
         description: "Date and time when the trip started at the pickup location."
@@ -81,6 +83,7 @@ models:
       Airport_fee:
         type: double
         description: "A $1.25 surcharge applicable to trips to/from LaGuardia or JFK airports."
+
 
 tags:
   - nyc

@@ -39,11 +39,18 @@ class DataContractLoader:
         deps_by_column = {}
 
         for column_name, column_field in fields.items():
+            nullable = column_field.required if column_field.required else True
+            unique = column_field.unique if column_field.unique else False
+
             columns.append(
                 dg.TableColumn(
                     name=column_name,
                     type=column_field.type,
                     description=column_field.description,
+                    constraints=dg.TableColumnConstraints(
+                        nullable=nullable,
+                        unique=unique,
+                    ),
                     tags=self._load_tags(column_field.tags),
                 )
             )
