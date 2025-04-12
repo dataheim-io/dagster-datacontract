@@ -12,7 +12,7 @@ uv add dagster-datacontract
 
 ## Simple Example
 
-The following example can be found inside the [example](https://github.com/dataheim-io/dagster-datacontract/tree/main/example) directory:
+A complete example can be found inside the [example](https://github.com/dataheim-io/dagster-datacontract/tree/main/example)-directory:
 
 ```python
 from datetime import timedelta

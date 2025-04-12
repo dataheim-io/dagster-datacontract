@@ -1,6 +1,6 @@
 # Example
 
-This directory contains a small example for how to leverage the capabilities in [`dagster-datacontract`](...) to provide context and metadata information to assets defined in Dagster.
+This directory contains a small example for how to leverage the capabilities in [`dagster-datacontract`](https://github.com/dataheim-io/dagster-datacontract) to provide context and metadata information to assets defined in Dagster.
 
 ## Prerequisites
 

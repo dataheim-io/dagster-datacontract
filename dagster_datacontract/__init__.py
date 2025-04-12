@@ -8,6 +8,8 @@ from dagster import TableColumnLineage, TableSchema
 from datacontract.data_contract import DataContract
 from datacontract.model.run import ResultEnum
 
+from dagster_datacontract.utils import normalize_path
+
 
 class DataContractLoader:
     def __init__(
@@ -31,10 +33,19 @@ class DataContractLoader:
     def _load_metadata(
         self,
     ) -> dict[str, TableColumnLineage | TableSchema | Any] | None:
-        fields = self.data_contract_specification.models.get(self.asset_name).fields
+        metadata = (
+            {
+                "data contract path": dg.MetadataValue.url(
+                    normalize_path(self.data_contract.data_contract_file)
+                )
+            }
+            if self.data_contract.data_contract_file
+            else {}
+        )
 
         columns = []
         deps_by_column = {}
+        fields = self.data_contract_specification.models.get(self.asset_name).fields
 
         for column_name, column_field in fields.items():
             columns.append(
@@ -59,12 +70,12 @@ class DataContractLoader:
                     for lineage_entry in lineage_entries
                 ]
 
-        return {
-            "dagster/column_schema": dg.TableSchema(columns=columns),
-            "dagster/column_lineage": dg.TableColumnLineage(
-                deps_by_column=deps_by_column
-            ),
-        }
+        metadata["dagster/column_schema"] = dg.TableSchema(columns=columns)
+        metadata["dagster/column_lineage"] = dg.TableColumnLineage(
+            deps_by_column=deps_by_column
+        )
+
+        return metadata
 
     def _load_tags(self) -> dict[str, str]:
         tags = {
@@ -96,7 +107,9 @@ class DataContractLoader:
             return None
 
     def load_description(
-        self, config: dict[str, Any] | None = None, separator: str = "\n"
+        self,
+        config: dict[str, Any] | None = None,
+        separator: str = "\n",
     ) -> str | None:
         """Load and return a formatted description string based on the data contract specification.
 
@@ -121,7 +134,6 @@ class DataContractLoader:
             'Model description...\nInfo description...'
         """
         default_config = {"order": ["model", "info"]}
-
         configuration = default_config | (config or {})
 
         descriptions = {
@@ -174,7 +186,12 @@ class DataContractLoader:
 
         return check_asset
 
-    def load_freshness_checks(self, lower_bound_delta: timedelta):
+    def load_freshness_checks(
+        self,
+        lower_bound_delta: timedelta,
+        severity: dg.AssetCheckSeverity = dg.AssetCheckSeverity.WARN,
+        blocking: bool = False,
+    ):
         """Generate and return freshness checks for the asset based on update recency.
 
         This method builds freshness checks using Dagster's
@@ -200,6 +217,8 @@ class DataContractLoader:
             assets=[self.asset_name],
             lower_bound_delta=lower_bound_delta,
             deadline_cron=self.cron_schedule,
+            severity=severity,
+            blocking=blocking,
         )
 
         return freshness_checks
