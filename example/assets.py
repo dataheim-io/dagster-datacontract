@@ -13,6 +13,7 @@ data_contract = DataContractLoader(
     asset_name=asset_name,
     data_contract=DataContract(
         data_contract_file="./example/datacontract.yml",
+        server="production",
     ),
 )
 
