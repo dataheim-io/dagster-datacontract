@@ -2,12 +2,11 @@ from datetime import timedelta
 from pathlib import Path
 
 import dagster as dg
-import requests
 import polars as pl
+import requests
 from datacontract.data_contract import DataContract
 
 from dagster_datacontract import DataContractLoader
-
 
 asset_name = "yellow_taxi_trip_records"
 data_contract = DataContractLoader(

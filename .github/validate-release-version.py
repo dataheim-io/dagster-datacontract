@@ -11,9 +11,8 @@ USAGE
     $ python .github/validate-release-version.py ./dist v0.2.0
 """
 
-import sys
 import os
-
+import sys
 
 if len(sys.argv) != 3:
     print("Requires positional arguments: <path to dist> <github.ref_name>")
