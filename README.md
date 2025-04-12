@@ -19,18 +19,18 @@ from datetime import timedelta
 from pathlib import Path
 
 import dagster as dg
-import requests
 import polars as pl
+import requests
 from datacontract.data_contract import DataContract
 
 from dagster_datacontract import DataContractLoader
-
 
 asset_name = "yellow_taxi_trip_records"
 data_contract = DataContractLoader(
     asset_name=asset_name,
     data_contract=DataContract(
         data_contract_file="./example/datacontract.yml",
+        server="production",
     ),
 )
 
@@ -39,7 +39,7 @@ data_contract = DataContractLoader(
     name=asset_name,
     metadata=data_contract.metadata,
     tags=data_contract.tags,
-    description=data_contract.load_description(),
+    description=data_contract.description,
     owners=data_contract.owner,
     code_version=data_contract.version,
 )
