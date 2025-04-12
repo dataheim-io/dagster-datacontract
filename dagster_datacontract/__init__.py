@@ -24,7 +24,7 @@ class DataContractLoader:
             self.data_contract.get_data_contract_specification()
         )
         self.metadata = self._load_metadata()
-        self.tags = self._load_tags()
+        self.tags = self._load_tags(self.data_contract_specification.tags)
         self.description = self.load_description()
         self.owner = self._load_owner()
         self.version = self._load_version()
@@ -39,11 +39,19 @@ class DataContractLoader:
         deps_by_column = {}
 
         for column_name, column_field in fields.items():
+            nullable = column_field.required if column_field.required else True
+            unique = column_field.unique if column_field.unique else False
+
             columns.append(
                 dg.TableColumn(
                     name=column_name,
                     type=column_field.type,
                     description=column_field.description,
+                    constraints=dg.TableColumnConstraints(
+                        nullable=nullable,
+                        unique=unique,
+                    ),
+                    tags=self._load_tags(column_field.tags),
                 )
             )
 
@@ -68,7 +76,10 @@ class DataContractLoader:
             ),
         }
 
-    def _load_tags(self) -> dict[str, str]:
+    @staticmethod
+    def _load_tags(
+        tags_list: list[str] | None,
+    ) -> dict[str, str]:
         """Safely load tags from data contract.
 
         More information about Dagster tags:
@@ -79,7 +90,7 @@ class DataContractLoader:
 
         tags = {}
 
-        for item in self.data_contract_specification.tags:
+        for item in tags_list:
             if ":" in item:
                 key, val = map(str.strip, item.split(":", 1))
             else:
