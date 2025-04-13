@@ -1,4 +1,3 @@
-import textwrap
 from datetime import timedelta
 from typing import Any
 
@@ -8,6 +7,7 @@ from datacontract.data_contract import DataContract
 from datacontract.model.run import ResultEnum
 from loguru import logger
 
+from dagster_datacontract.description import get_description
 from dagster_datacontract.metadata import (
     get_column_lineage,
     get_table_column,
@@ -29,7 +29,10 @@ class DataContractLoader:
         )
         self.metadata = self._load_metadata()
         self.tags = get_tags(self.data_contract_specification.tags)
-        self.description = self.load_description()
+        self.description = get_description(
+            self.asset_name,
+            self.data_contract_specification,
+        )
         self.owner = self._load_owner()
         self.version = self._load_version()
         self.cron_schedule = self._load_cron_schedule()
@@ -75,55 +78,6 @@ class DataContractLoader:
         except AttributeError:
             logger.warning("'servicelevels.frequency.cron' not found in Data Contract.")
             return None
-
-    def load_description(
-        self,
-        config: dict[str, Any] | None = None,
-        separator: str = "\n",
-    ) -> str | None:
-        """Load and return a formatted description string based on the data contract specification.
-
-        This method composes a description by pulling text from different parts
-        of the data contract specification (e.g., model and info descriptions),
-        joining them using the specified separator.
-
-        Args:
-            config (dict[str, Any] | None, optional): A configuration dictionary
-                specifying the order in which to concatenate the description parts.
-                Defaults to `{"order": ["model", "info"]}`.
-            separator (str, optional): A string used to separate different parts
-                of the description. Defaults to a newline character (`"\n"`).
-
-        Returns:
-            str | None: A single string combining the specified description parts
-            if available, otherwise `None`.
-
-
-        Example:
-            >>> self.load_description()
-            'Model description...\nInfo description...'
-        """
-        default_config = {"order": ["model", "info"]}
-
-        configuration = default_config | (config or {})
-
-        descriptions = {
-            "model": self.data_contract_specification.models.get(
-                self.asset_name
-            ).description,
-            "info": self.data_contract_specification.info.description,
-        }
-
-        parts = []
-        for key in configuration["order"]:
-            desc = descriptions.get(key).replace("\n", f"{separator}\n")
-            if desc:
-                parts.append(textwrap.dedent(desc))
-
-        if parts:
-            return f"{separator}\n".join(parts)
-
-        return None
 
     def load_data_quality_checks(self) -> dg.AssetChecksDefinition:
         """Define and return a data quality check for the specified asset.
