@@ -1,4 +1,8 @@
+import json
+from typing import Any
+
 import dagster as dg
+from dagster import TableColumnDep
 from datacontract.model.data_contract_specification import Field
 
 from dagster_datacontract.tags.load_tags import get_tags
@@ -73,3 +77,33 @@ def get_table_column(column_name: str, column_field: Field) -> dg.TableColumn:
         constraints=get_table_column_constraints(column_field),
         tags=get_tags(column_field.tags),
     )
+
+
+def get_column_lineage(column_field: Field) -> list[Any] | list[TableColumnDep | Any]:
+    """Extract column-level lineage information from a Field and return it as a list of TableColumnDep objects.
+
+    The function parses the JSON-serialized Field to retrieve any input lineage
+    defined under the "lineage.inputFields" key. Each lineage entry is converted
+    into a Dagster TableColumnDep representing a dependency on a specific column
+    of another asset.
+
+    Args:
+        column_field (Field): The Field instance that may contain lineage metadata.
+
+    Returns:
+        list[Any] | list[TableColumnDep | Any]: A list of TableColumnDep objects
+            if lineage is defined; otherwise, an empty list.
+    """
+    lineage = json.loads(column_field.model_dump_json()).get("lineage")
+
+    if not lineage:
+        return []
+
+    lineage_entries = lineage.get("inputFields")
+    return [
+        dg.TableColumnDep(
+            asset_key=dg.AssetKey(lineage_entry["name"]),
+            column_name=lineage_entry["field"],
+        )
+        for lineage_entry in lineage_entries
+    ]
