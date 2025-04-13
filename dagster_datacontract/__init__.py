@@ -1,5 +1,4 @@
 import json
-import re
 import textwrap
 from datetime import timedelta
 from typing import Any
@@ -8,7 +7,11 @@ import dagster as dg
 from dagster import TableColumnLineage, TableSchema
 from datacontract.data_contract import DataContract
 from datacontract.model.run import ResultEnum
-from loguru import logger
+
+from dagster_datacontract.metadata.table_colums import (
+    get_table_column,
+)
+from dagster_datacontract.tags.load_tags import get_tags
 
 
 class DataContractLoader:
@@ -24,7 +27,7 @@ class DataContractLoader:
             self.data_contract.get_data_contract_specification()
         )
         self.metadata = self._load_metadata()
-        self.tags = self._load_tags(self.data_contract_specification.tags)
+        self.tags = get_tags(self.data_contract_specification.tags)
         self.description = self.load_description()
         self.owner = self._load_owner()
         self.version = self._load_version()
@@ -39,21 +42,8 @@ class DataContractLoader:
         deps_by_column = {}
 
         for column_name, column_field in fields.items():
-            nullable = column_field.required if column_field.required else True
-            unique = column_field.unique if column_field.unique else False
-
-            columns.append(
-                dg.TableColumn(
-                    name=column_name,
-                    type=column_field.type,
-                    description=column_field.description,
-                    constraints=dg.TableColumnConstraints(
-                        nullable=nullable,
-                        unique=unique,
-                    ),
-                    tags=self._load_tags(column_field.tags),
-                )
-            )
+            table_column = get_table_column(column_name, column_field)
+            columns.append(table_column)
 
             lineage = json.loads(column_field.model_dump_json()).get("lineage")
             if not lineage:
@@ -75,33 +65,6 @@ class DataContractLoader:
                 deps_by_column=deps_by_column
             ),
         }
-
-    @staticmethod
-    def _load_tags(
-        tags_list: list[str] | None,
-    ) -> dict[str, str]:
-        """Safely load tags from data contract.
-
-        More information about Dagster tags:
-        https://docs.dagster.io/guides/build/assets/metadata-and-tags/tags
-        """
-        key_pattern = re.compile(r"^[\w.-]{1,63}$")
-        val_pattern = re.compile(r"^[\w.-]{0,63}$")
-
-        tags = {}
-
-        for item in tags_list:
-            if ":" in item:
-                key, val = map(str.strip, item.split(":", 1))
-            else:
-                key, val = item.strip(), ""
-
-            if key_pattern.match(key) and val_pattern.match(val):
-                tags[key] = val
-            else:
-                logger.warning(f"Ignoring invalid tag: {item}")
-
-        return tags
 
     def _load_owner(self) -> list[str] | None:
         owner = self.data_contract_specification.info.owner
