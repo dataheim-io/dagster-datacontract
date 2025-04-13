@@ -7,11 +7,11 @@ from dagster import TableColumnLineage, TableSchema
 from datacontract.data_contract import DataContract
 from datacontract.model.run import ResultEnum
 
-from dagster_datacontract.metadata.table_colums import (
+from dagster_datacontract.metadata import (
     get_column_lineage,
     get_table_column,
 )
-from dagster_datacontract.tags.load_tags import get_tags
+from dagster_datacontract.tags import get_tags
 
 
 class DataContractLoader:
@@ -75,7 +75,9 @@ class DataContractLoader:
             return None
 
     def load_description(
-        self, config: dict[str, Any] | None = None, separator: str = "\n"
+        self,
+        config: dict[str, Any] | None = None,
+        separator: str = "\n",
     ) -> str | None:
         """Load and return a formatted description string based on the data contract specification.
 

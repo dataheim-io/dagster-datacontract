@@ -5,7 +5,7 @@ import dagster as dg
 from dagster import TableColumnDep
 from datacontract.model.data_contract_specification import Field
 
-from dagster_datacontract.tags.load_tags import get_tags
+from dagster_datacontract.tags import get_tags
 
 
 def get_other_item(name: str, column_field: Field) -> list[str] | None:
