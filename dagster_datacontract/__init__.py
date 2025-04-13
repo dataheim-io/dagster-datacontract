@@ -1,4 +1,3 @@
-import json
 import textwrap
 from datetime import timedelta
 from typing import Any
@@ -9,6 +8,7 @@ from datacontract.data_contract import DataContract
 from datacontract.model.run import ResultEnum
 
 from dagster_datacontract.metadata.table_colums import (
+    get_column_lineage,
     get_table_column,
 )
 from dagster_datacontract.tags.load_tags import get_tags
@@ -36,28 +36,17 @@ class DataContractLoader:
     def _load_metadata(
         self,
     ) -> dict[str, TableColumnLineage | TableSchema | Any] | None:
-        fields = self.data_contract_specification.models.get(self.asset_name).fields
-
         columns = []
         deps_by_column = {}
+
+        fields = self.data_contract_specification.models.get(self.asset_name).fields
 
         for column_name, column_field in fields.items():
             table_column = get_table_column(column_name, column_field)
             columns.append(table_column)
 
-            lineage = json.loads(column_field.model_dump_json()).get("lineage")
-            if not lineage:
-                deps_by_column[column_name] = []
-            else:
-                lineage_entries = lineage.get("inputFields")
-
-                deps_by_column[column_name] = [
-                    dg.TableColumnDep(
-                        asset_key=dg.AssetKey(lineage_entry["name"]),
-                        column_name=lineage_entry["field"],
-                    )
-                    for lineage_entry in lineage_entries
-                ]
+            table_column_lineage = get_column_lineage(column_field)
+            deps_by_column[column_name] = table_column_lineage
 
         return {
             "dagster/column_schema": dg.TableSchema(columns=columns),
