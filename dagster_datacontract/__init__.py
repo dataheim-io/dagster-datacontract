@@ -6,6 +6,7 @@ import dagster as dg
 from dagster import TableColumnLineage, TableSchema
 from datacontract.data_contract import DataContract
 from datacontract.model.run import ResultEnum
+from loguru import logger
 
 from dagster_datacontract.metadata import (
     get_column_lineage,
@@ -72,6 +73,7 @@ class DataContractLoader:
             )
             return cron_schedule
         except AttributeError:
+            logger.warning("'servicelevels.frequency.cron' not found in Data Contract.")
             return None
 
     def load_description(
