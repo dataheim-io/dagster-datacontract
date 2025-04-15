@@ -8,6 +8,26 @@ def get_server_information(
     server_name: str | None,
     asset_name: str,
 ) -> dict[str, str]:
+    """Returns a dictionary containing server-specific information to be used
+    by Dagster for identifying asset locations or connections.
+
+    This function inspects the provided `DataContractSpecification` to locate
+    the specified server by name and constructs a dictionary with keys such as
+    "dagster/uri" and "dagster/table_name" depending on the server type.
+
+    Parameters:
+        data_contract_specification (DataContractSpecification):
+            The data contract specification containing server configurations.
+        server_name (str | None):
+            The name of the server to retrieve information for. If None or not found, returns an empty dict.
+        asset_name (str):
+            The name of the asset, used for constructing fully qualified table names for certain server types.
+
+    Returns:
+        dict[str, str]: A dictionary with keys like "dagster/uri" and/or "dagster/table_name"
+        depending on the server type. Returns an empty dictionary if the server is not found
+        or if the server type is not recognized or unsupported.
+    """
     server = data_contract_specification.servers.get(server_name)
     if not server:
         return {}
