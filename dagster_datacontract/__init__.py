@@ -10,6 +10,7 @@ from loguru import logger
 from dagster_datacontract.description import get_description
 from dagster_datacontract.metadata import (
     get_column_lineage,
+    get_server_information,
     get_table_column,
 )
 from dagster_datacontract.tags import get_tags
@@ -18,15 +19,17 @@ from dagster_datacontract.tags import get_tags
 class DataContractLoader:
     def __init__(
         self,
-        asset_name: str,
         data_contract: DataContract,
+        asset_name: str,
+        server_name: str,
     ):
-        self.asset_name = asset_name
-        self.asset_key = dg.AssetKey(path=self.asset_name)
         self.data_contract = data_contract
         self.data_contract_specification = (
             self.data_contract.get_data_contract_specification()
         )
+        self.asset_name = asset_name
+        self.asset_key = dg.AssetKey(path=self.asset_name)
+        self.server_name = server_name
         self.metadata = self._load_metadata()
         self.tags = get_tags(self.data_contract_specification.tags)
         self.description = get_description(
@@ -52,11 +55,16 @@ class DataContractLoader:
             table_column_lineage = get_column_lineage(column_field)
             deps_by_column[column_name] = table_column_lineage
 
+        server_information = get_server_information(
+            self.data_contract_specification, self.server_name, self.asset_name
+        )
+
         return {
             "dagster/column_schema": dg.TableSchema(columns=columns),
             "dagster/column_lineage": dg.TableColumnLineage(
                 deps_by_column=deps_by_column
             ),
+            **server_information,
         }
 
     def _load_owner(self) -> list[str] | None:

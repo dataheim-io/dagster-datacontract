@@ -10,11 +10,11 @@ from dagster_datacontract import DataContractLoader
 
 asset_name = "yellow_taxi_trip_records"
 data_contract = DataContractLoader(
-    asset_name=asset_name,
     data_contract=DataContract(
         data_contract_file="./example/datacontract.yml",
-        server="production",
     ),
+    asset_name=asset_name,
+    server_name="production",
 )
 
 
