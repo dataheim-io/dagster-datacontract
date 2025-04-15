@@ -1,17 +1,6 @@
-import os
-import urllib.parse
-
 from datacontract.data_contract import DataContractSpecification
 
-
-def _normalize_path(path: str) -> str:
-    parsed = urllib.parse.urlparse(path)
-
-    if not parsed.scheme or parsed.scheme == "file":
-        full_path = os.path.abspath(os.path.expanduser(path))
-        return f"file://{full_path}"
-    else:
-        return path
+from dagster_datacontract.utils import normalize_path
 
 
 def get_server_information(
@@ -37,7 +26,7 @@ def get_server_information(
         case "kinesis":
             server_information = {}
         case "local":
-            server_information["dagster/uri"] = _normalize_path(server.path)
+            server_information["dagster/uri"] = normalize_path(server.path)
         case "oracle":
             server_information["dagster/uri"] = f"{server.host}:{server.port}"
         case "postgres":
