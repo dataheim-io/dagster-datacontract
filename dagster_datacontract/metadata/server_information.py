@@ -16,7 +16,7 @@ def _normalize_path(path: str) -> str:
 
 def get_server_information(
     data_contract_specification: DataContractSpecification,
-    server_name: str,
+    server_name: str | None,
     asset_name: str,
 ) -> dict[str, str]:
     server = data_contract_specification.servers.get(server_name)

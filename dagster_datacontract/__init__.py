@@ -19,17 +19,15 @@ from dagster_datacontract.tags import get_tags
 class DataContractLoader:
     def __init__(
         self,
-        data_contract: DataContract,
         asset_name: str,
-        server_name: str,
+        data_contract: DataContract,
     ):
+        self.asset_name = asset_name
+        self.asset_key = dg.AssetKey(path=self.asset_name)
         self.data_contract = data_contract
         self.data_contract_specification = (
             self.data_contract.get_data_contract_specification()
         )
-        self.asset_name = asset_name
-        self.asset_key = dg.AssetKey(path=self.asset_name)
-        self.server_name = server_name
         self.metadata = self._load_metadata()
         self.tags = get_tags(self.data_contract_specification.tags)
         self.description = get_description(
@@ -56,7 +54,9 @@ class DataContractLoader:
             deps_by_column[column_name] = table_column_lineage
 
         server_information = get_server_information(
-            self.data_contract_specification, self.server_name, self.asset_name
+            self.data_contract_specification,
+            self.data_contract._server,
+            self.asset_name,
         )
 
         return {
