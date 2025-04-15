@@ -108,7 +108,11 @@ class DataContractLoader:
             blocking=True,
         )
         def check_asset():
-            run = self.data_contract.test()
+            data_contract = DataContract(
+                data_contract=self.data_contract_specification,
+                server=self.server_name,
+            )
+            run = data_contract.test()
 
             return dg.AssetCheckResult(
                 passed=run.result == ResultEnum.passed,
