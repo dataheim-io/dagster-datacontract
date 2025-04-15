@@ -14,6 +14,7 @@ from dagster_datacontract.metadata import (
     get_table_column,
 )
 from dagster_datacontract.tags import get_tags
+from dagster_datacontract.utils import normalize_path
 
 
 class DataContractLoader:
@@ -41,6 +42,15 @@ class DataContractLoader:
     def _load_metadata(
         self,
     ) -> dict[str, TableColumnLineage | TableSchema | Any] | None:
+        metadata = (
+            {
+                "data contract path": dg.MetadataValue.url(
+                    normalize_path(self.data_contract._data_contract_file)
+                ),
+            }
+            if self.data_contract._data_contract_file
+            else {}
+        )
         columns = []
         deps_by_column = {}
 
@@ -53,19 +63,19 @@ class DataContractLoader:
             table_column_lineage = get_column_lineage(column_field)
             deps_by_column[column_name] = table_column_lineage
 
+        metadata["dagster/column_schema"] = dg.TableSchema(columns=columns)
+        metadata["dagster/column_lineage"] = dg.TableColumnLineage(
+            deps_by_column=deps_by_column
+        )
+
         server_information = get_server_information(
             self.data_contract_specification,
             self.data_contract._server,
             self.asset_name,
         )
+        metadata.update(server_information)
 
-        return {
-            "dagster/column_schema": dg.TableSchema(columns=columns),
-            "dagster/column_lineage": dg.TableColumnLineage(
-                deps_by_column=deps_by_column
-            ),
-            **server_information,
-        }
+        return metadata
 
     def _load_owner(self) -> list[str] | None:
         owner = self.data_contract_specification.info.owner
@@ -108,11 +118,7 @@ class DataContractLoader:
             blocking=True,
         )
         def check_asset():
-            data_contract = DataContract(
-                data_contract=self.data_contract_specification,
-                server=self.server_name,
-            )
-            run = data_contract.test()
+            run = self.data_contract.test()
 
             return dg.AssetCheckResult(
                 passed=run.result == ResultEnum.passed,
