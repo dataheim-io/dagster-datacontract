@@ -19,6 +19,7 @@ servers:
 
 models:
   yellow_taxi_trip_records:
+    title: TODO.
     description: "Trip records for NYC yellow taxis, including pickup and drop-off details, passenger and fare information, and associated surcharges."
     fields:
       VendorID:
@@ -28,9 +29,11 @@ models:
         unique: false
       tpep_pickup_datetime:
         type: timestamp_ntz
+        title: "Passenger Pickup Time"
         description: "Date and time when the trip started at the pickup location."
       tpep_dropoff_datetime:
         type: timestamp_ntz
+        title: "Passenger Drop-off Time"
         description: "Date and time when the trip ended at the drop-off location."
       passenger_count:
         type: bigint
@@ -73,7 +76,7 @@ models:
         description: "Total tolls paid during the trip."
       improvement_surcharge:
         type: double
-        description: "A $0.30 fee mandated by the TLC to improve the quality of service."
+        description: "A $1.00 fee mandated by the TLC to improve the quality of service."
       total_amount:
         type: double
         description: "Total amount charged to the passenger, including all fares, tolls, surcharges, and tips."
@@ -82,7 +85,7 @@ models:
         description: "A fee assessed for trips that begin, end, or pass through Manhattan south of 96th Street."
       Airport_fee:
         type: double
-        description: "A $1.25 surcharge applicable to trips to/from LaGuardia or JFK airports."
+        description: "A $1.75 surcharge applicable to trips to/from LaGuardia or JFK airports."
 
 
 tags:
