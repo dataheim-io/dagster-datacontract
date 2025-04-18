@@ -87,7 +87,6 @@ models:
         type: double
         description: "A $1.75 surcharge applicable to trips to/from LaGuardia or JFK airports."
 
-
 tags:
   - nyc
   - yellow-taxi

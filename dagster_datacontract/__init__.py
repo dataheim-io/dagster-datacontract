@@ -13,6 +13,7 @@ from dagster_datacontract.metadata import (
     get_server_information,
     get_table_column,
 )
+from dagster_datacontract.owners import get_owner
 from dagster_datacontract.tags import get_tags
 from dagster_datacontract.utils import normalize_path
 
@@ -35,7 +36,7 @@ class DataContractLoader:
             self.asset_name,
             self.data_contract_specification,
         )
-        self.owner = self._load_owner()
+        self.owner = get_owner(self.data_contract_specification)
         self.version = self._load_version()
         self.cron_schedule = self._load_cron_schedule()
 
@@ -76,11 +77,6 @@ class DataContractLoader:
         metadata.update(server_information)
 
         return metadata
-
-    def _load_owner(self) -> list[str] | None:
-        owner = self.data_contract_specification.info.owner
-
-        return [f"team:{owner}"] if owner else None
 
     def _load_version(self) -> str | None:
         version = self.data_contract_specification.info.version
