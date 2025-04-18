@@ -1,0 +1,122 @@
+dataContractSpecification: 1.1.0
+id: demo
+info:
+  title: Demo Contract
+  version: 1.0.0
+  owner: Finance
+  description: >
+    This data contract defines the schema and metadata for NYC Yellow Taxi trip records,
+    including pickup/drop-off timestamps, locations, fare components, and passenger information.
+    
+    It provides a standardized structure for mobility analytics, fare modeling, and transportation planning
+    based on publicly available taxi ride data in New York City.
+
+servers:
+  production:
+    type: local
+    path: ./example/data/yellow_tripdata_2025-01.parquet
+    format: parquet
+
+models:
+  yellow_taxi_trip_records:
+    title: TODO.
+    description: "Trip records for NYC yellow taxis, including pickup and drop-off details, passenger and fare information, and associated surcharges."
+    fields:
+      VendorID:
+        type: integer
+        description: "A code indicating the taxi company or technology provider associated with the trip."
+        required: true
+        unique: false
+      tpep_pickup_datetime:
+        type: timestamp_ntz
+        title: "Passenger Pickup Time"
+        description: "Date and time when the trip started at the pickup location."
+      tpep_dropoff_datetime:
+        type: timestamp_ntz
+        title: "Passenger Drop-off Time"
+        description: "Date and time when the trip ended at the drop-off location."
+      passenger_count:
+        type: bigint
+        description: "The number of passengers in the vehicle. This is a driver-entered value."
+      trip_distance:
+        type: double
+        description: "The total distance of the trip in miles."
+      RatecodeID:
+        type: bigint
+        description: "The final rate code in effect at the end of the trip. This indicates the rate type applied."
+      store_and_fwd_flag:
+        type: string
+        description: "Indicates whether the trip record was held in vehicle memory before sending to the vendor (‘Y’ = store and forward; ‘N’ = not store and forward)."
+      PULocationID:
+        type: integer
+        description: "TLC Taxi Zone ID where the passenger was picked up."
+      DOLocationID:
+        type: integer
+        description: "TLC Taxi Zone ID where the passenger was dropped off."
+      payment_type:
+        type: bigint
+        description: "A numeric code representing the payment method used (e.g., credit card, cash)."
+        tags:
+          - credit-card
+          - cash
+      fare_amount:
+        type: double
+        description: "The base fare charged for the trip."
+      extra:
+        type: double
+        description: "Miscellaneous extras and surcharges. Currently, this only includes the $0.50 and $1 rush hour and overnight charges."
+      mta_tax:
+        type: double
+        description: "A tax of $0.50 mandated by the MTA for all trips within NYC."
+      tip_amount:
+        type: double
+        description: "Tip amount provided by the passenger, typically for credit card transactions."
+      tolls_amount:
+        type: double
+        description: "Total tolls paid during the trip."
+      improvement_surcharge:
+        type: double
+        description: "A $1.00 fee mandated by the TLC to improve the quality of service."
+      total_amount:
+        type: double
+        description: "Total amount charged to the passenger, including all fares, tolls, surcharges, and tips."
+      congestion_surcharge:
+        type: double
+        description: "A fee assessed for trips that begin, end, or pass through Manhattan south of 96th Street."
+      Airport_fee:
+        type: double
+        description: "A $1.75 surcharge applicable to trips to/from LaGuardia or JFK airports."
+
+tags:
+  - nyc
+  - yellow-taxi
+  - transportation
+  - mobility
+  - public-data
+  - taxi-trips
+  - fare-analysis
+  - geospatial
+  - time-series
+  - payments
+  - tlc
+  - ride-data
+  - analytics
+  - "source: NYC-TLC"
+  - "dataset-type: public"
+  - "vehicle-type: yellow-taxi"
+  - "domain: transportation"
+  - "city: New-York"
+  - "granularity: trip-level"
+  - "time-grain: event"
+  - "frequency: batch"
+  - "use-case: mobility-analytics"
+  - "pii: no"
+  - "location-data: yes"
+  - "monetary-data: yes"
+
+servicelevels:
+  frequency:
+    cron: 0 6 1 * *
+
+links:
+  nyc-yellow-cab: https://www.nyc.gov/site/tlc/businesses/yellow-cab.page

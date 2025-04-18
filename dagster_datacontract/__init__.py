@@ -56,19 +56,24 @@ class DataContractLoader:
         columns = []
         deps_by_column = {}
 
-        fields = self.data_contract_specification.models.get(self.asset_name).fields
+        try:
+            fields = self.data_contract_specification.models.get(self.asset_name).fields
 
-        for column_name, column_field in fields.items():
-            table_column = get_table_column(column_name, column_field)
-            columns.append(table_column)
+            for column_name, column_field in fields.items():
+                table_column = get_table_column(column_name, column_field)
+                columns.append(table_column)
 
-            table_column_lineage = get_column_lineage(column_field)
-            deps_by_column[column_name] = table_column_lineage
+                table_column_lineage = get_column_lineage(column_field)
+                deps_by_column[column_name] = table_column_lineage
 
-        metadata["dagster/column_schema"] = dg.TableSchema(columns=columns)
-        metadata["dagster/column_lineage"] = dg.TableColumnLineage(
-            deps_by_column=deps_by_column
-        )
+            metadata["dagster/column_schema"] = dg.TableSchema(columns=columns)
+            metadata["dagster/column_lineage"] = dg.TableColumnLineage(
+                deps_by_column=deps_by_column
+            )
+        except AttributeError as e:
+            logger.warning(
+                f"No field named {self.asset_name} found in data contract.\n{e}"
+            )
 
         server_information = get_server_information(
             self.data_contract_specification,
