@@ -10,6 +10,7 @@ from loguru import logger
 from dagster_datacontract.description import get_description
 from dagster_datacontract.metadata import (
     get_column_lineage,
+    get_links,
     get_server_information,
     get_table_column,
 )
@@ -45,7 +46,7 @@ class DataContractLoader:
     ) -> dict[str, TableColumnLineage | TableSchema | Any] | None:
         metadata = (
             {
-                "data contract path": dg.MetadataValue.url(
+                "datacontract/path": dg.MetadataValue.url(
                     normalize_path(self.data_contract._data_contract_file)
                 ),
             }
@@ -75,6 +76,9 @@ class DataContractLoader:
             self.asset_name,
         )
         metadata.update(server_information)
+
+        links = get_links(self.data_contract_specification.links)
+        metadata.update(links)
 
         return metadata
 
