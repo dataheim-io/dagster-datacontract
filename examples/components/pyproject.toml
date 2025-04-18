@@ -4,7 +4,7 @@ requires-python = ">=3.11.10"
 version = "0.1.0"
 dependencies = [
     "dagster",
-    "dagster-datacontract"
+    "dagster-datacontract",
 ]
 
 [project.entry-points]
@@ -14,6 +14,9 @@ dependencies = [
 dev = [
     "dagster-webserver",
 ]
+
+[tool.uv.sources]
+dagster-datacontract = { path = "../../", editable = true }
 
 [build-system]
 requires = ["hatchling"]

@@ -1,4 +1,6 @@
+from collections.abc import Sequence
 from datetime import timedelta
+from pathlib import Path
 from typing import Any
 
 import dagster as dg
@@ -163,3 +165,43 @@ class DataContractLoader:
         )
 
         return freshness_checks
+
+
+def load_asset_specifications(
+    context_path: Path,
+    data_contract_path: str,
+    asset_specs: Sequence[dg.components.ResolvedAssetSpec],
+) -> Sequence[dg.AssetSpec]:
+    """TODO."""
+    loaded_asset_specs = []
+
+    for asset_spec in asset_specs:
+        asset_contract = asset_spec.metadata["datacontract/path"]
+        data_contract_path = asset_contract if asset_contract else data_contract_path
+        resolved_data_contract_path = str(
+            Path(context_path, data_contract_path).absolute()
+        )
+
+        data_contract = DataContractLoader(
+            asset_name=asset_spec.key.path[0],
+            data_contract=DataContract(
+                data_contract_file=resolved_data_contract_path,
+            ),
+        )
+
+        asset_spec.metadata.update(data_contract.metadata)
+
+        loaded_asset_specs.append(
+            dg.AssetSpec(
+                key=asset_spec.key.path[0],
+                metadata=asset_spec.metadata,
+                tags={**asset_spec.tags, **data_contract.tags},
+                description=asset_spec.description
+                if asset_spec.description
+                else data_contract.description,
+                owners=list(asset_spec.owners) + data_contract.owner,
+                code_version=data_contract.version,
+            )
+        )
+
+    return loaded_asset_specs
