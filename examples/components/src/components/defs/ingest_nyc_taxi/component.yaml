@@ -1,10 +1,16 @@
 type: components.lib.IngestParquetFromAPI
 
 attributes:
-  script_path: script.sh
+  download_path: ./data
   data_contract_path: datacontract.yml
   asset_specs:
     - key: yellow_taxi_trip_records
       description: Output of running a script
       metadata:
         datacontract/path: datacontract.yml
+    - key: yellow_taxi_trip_records2
+      description: Output of running a script
+      deps:
+      - yellow_taxi_trip_records
+      metadata:
+        datacontract/path: datacontract2.yml

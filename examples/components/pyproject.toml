@@ -3,8 +3,9 @@ name = "components"
 requires-python = ">=3.11.10"
 version = "0.1.0"
 dependencies = [
-    "dagster",
     "dagster-datacontract",
+    "dagster",
+    "polars",
 ]
 
 [project.entry-points]

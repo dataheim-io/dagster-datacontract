@@ -1,11 +1,7 @@
-from collections.abc import Generator, Sequence
 from datetime import timedelta
-from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
 
 import dagster as dg
-from dagster import AssetCheckResult, TableColumnLineage, TableSchema
 from datacontract.data_contract import DataContract
 from datacontract.model.run import ResultEnum
 from loguru import logger
@@ -53,10 +49,18 @@ class DataContractLoader:
         self.owner = get_owner(self.data_contract_specification)
         self.version = self._load_version()
         self.cron_schedule = self._load_cron_schedule()
+        self.asset_spec = dg.AssetSpec(
+            key=asset_name,
+            description=self.description,
+            metadata=self.metadata,
+            code_version=self.version,
+            owners=self.owner,
+            tags=self.tags,
+        )
 
     def _load_metadata(
         self,
-    ) -> dict[str, TableColumnLineage | TableSchema | Any] | None:
+    ) -> dict[str, dg.TableColumnLineage | dg.TableSchema | Any] | None:
         metadata = (
             {
                 "datacontract/path": dg.MetadataValue.url(
@@ -176,127 +180,3 @@ class DataContractLoader:
         )
 
         return freshness_checks
-
-
-def load_asset_specifications(
-    context_path: Path,
-    data_contract_path: str,
-    asset_specs: Sequence[dg.components.ResolvedAssetSpec],
-) -> Sequence[dg.AssetSpec]:
-    """TODO."""
-    loaded_asset_specs = []
-
-    for asset_spec in asset_specs:
-        asset_contract = asset_spec.metadata["datacontract/path"]
-        data_contract_path = asset_contract if asset_contract else data_contract_path
-        resolved_data_contract_path = str(
-            Path(context_path, data_contract_path).absolute()
-        )
-
-        asset_name = asset_spec.key.path[0]
-        data_contract = DataContractLoader(
-            asset_name=asset_name,
-            data_contract=DataContract(
-                data_contract_file=resolved_data_contract_path,
-            ),
-        )
-
-        asset_spec.metadata.update(data_contract.metadata)
-        description = f"{asset_spec.description}\n\n{data_contract.description}"
-
-        loaded_asset_specs.append(
-            dg.AssetSpec(
-                key=asset_name,
-                metadata=asset_spec.metadata,
-                tags={**asset_spec.tags, **data_contract.tags},
-                description=description,
-                owners=list(asset_spec.owners) + data_contract.owner,
-                code_version=data_contract.version,
-            )
-        )
-
-    return loaded_asset_specs
-
-
-def load_asset_check_specifications(
-    context_path: Path,
-    data_contract_path: str,
-    asset_specs: Sequence[dg.components.ResolvedAssetSpec],
-) -> Sequence[dg.AssetCheckSpec]:
-    """TODO."""
-    loaded_asset_check_specs = []
-
-    for asset_spec in asset_specs:
-        asset_contract = asset_spec.metadata["datacontract/path"]
-        if isinstance(asset_contract, dg.UrlMetadataValue):
-            asset_contract = asset_spec.metadata["datacontract/path"].url
-
-        data_contract_path = asset_contract if asset_contract else data_contract_path
-        print(data_contract_path)
-
-        parsed = urlparse(data_contract_path)
-        if parsed.scheme == "file":
-            path = Path(parsed.path)
-        else:
-            path = Path(data_contract_path)
-
-        if path.is_absolute():
-            resolved_data_contract_path = str(path)
-        else:
-            resolved_data_contract_path = str(
-                Path(context_path, data_contract_path).absolute()
-            )
-
-        asset_name = asset_spec.key.path[0]
-        data_contract = DataContractLoader(
-            asset_name=asset_name,
-            data_contract=DataContract(
-                data_contract_file=resolved_data_contract_path,
-            ),
-        )
-
-        loaded_asset_check_specs.append(
-            dg.AssetCheckSpec(
-                name=f"check_{asset_name}",
-                asset=asset_name,
-                metadata=data_contract.metadata,
-            )
-        )
-
-    return loaded_asset_check_specs
-
-
-def load_asset_checks(
-    context_path: Path,
-    data_contract_path: str,
-    asset_specs: Sequence[dg.components.ResolvedAssetSpec],
-) -> dg.AssetChecksDefinition:
-    """TODO."""
-    asset_check_specs = load_asset_check_specifications(
-        context_path, data_contract_path, asset_specs
-    )
-
-    @dg.multi_asset_check(specs=asset_check_specs)
-    def multi_contract_checks(
-        context: dg.AssetCheckExecutionContext,
-    ) -> Generator[AssetCheckResult | Any, Any, None]:
-        """TODO."""
-        for asset_check_spec in context.check_specs:
-            metadata = asset_check_spec.metadata
-            context.log.info(f"Metadata: {metadata}")
-
-            contract_path: dg.UrlMetadataValue = metadata["datacontract/path"]
-            context.log.info(f"Contract path: {contract_path.url}")
-
-            data_contract = DataContract(data_contract_file=contract_path)
-
-            run = data_contract.test()
-
-            yield dg.AssetCheckResult(
-                passed=run.result == ResultEnum.passed,
-                metadata={
-                    "quality check": run.pretty(),
-                },
-            )
-
-    return multi_contract_checks

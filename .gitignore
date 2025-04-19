@@ -179,4 +179,4 @@ cython_debug/
 
 # Package specific
 .tmp*
-examples/*/data/
+examples/**/data/

@@ -14,11 +14,11 @@ info:
 servers:
   production:
     type: local
-    path: ./data/yellow_tripdata_2025-01.parquet
+    path: ./example/data/yellow_tripdata_2025-01.parquet
     format: parquet
 
 models:
-  yellow_taxi_trip_records:
+  yellow_taxi_trip_records2:
     title: TODO.
     description: "Trip records for NYC yellow taxis, including pickup and drop-off details, passenger and fare information, and associated surcharges."
     fields:
