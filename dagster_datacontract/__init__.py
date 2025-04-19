@@ -190,15 +190,14 @@ def load_asset_specifications(
         )
 
         asset_spec.metadata.update(data_contract.metadata)
+        description = f"{asset_spec.description}\n\n{data_contract.description}"
 
         loaded_asset_specs.append(
             dg.AssetSpec(
                 key=asset_spec.key.path[0],
                 metadata=asset_spec.metadata,
                 tags={**asset_spec.tags, **data_contract.tags},
-                description=asset_spec.description
-                if asset_spec.description
-                else data_contract.description,
+                description=description,
                 owners=list(asset_spec.owners) + data_contract.owner,
                 code_version=data_contract.version,
             )
