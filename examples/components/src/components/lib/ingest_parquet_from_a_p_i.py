@@ -11,11 +11,9 @@ from dagster.components import (
     Resolvable,
     ResolvedAssetSpec,
 )
+from dagster.components.resolved.core_models import ResolvedAssetCheckSpec
 
-from dagster_datacontract.components import (
-    load_asset_checks,
-    load_asset_specifications,
-)
+from dagster_datacontract.specifications import combine_asset_specs
 
 
 @dataclass
@@ -27,50 +25,78 @@ class IngestParquetFromAPI(Component, Resolvable):
     the Dagster Component assets.
 
     By default, it can be loaded with specifying the
-    `data_contract_path`-value or the `datacontract/path`
-    metadata value within the asset_specs.
+    `datacontract/path` metadata value within the asset_specs.
     """
 
     download_path: str
-    data_contract_path: str
     asset_specs: Sequence[ResolvedAssetSpec]
+    checks: Sequence[ResolvedAssetCheckSpec]
+
+    def get_check_specs(self) -> Sequence[dg.AssetCheckSpec]:
+        return [check.to_dagster() for check in self.checks]
 
     def build_defs(self, context: ComponentLoadContext) -> dg.Definitions:
-        resolved_download_path = Path(context.path, self.download_path).absolute()
-        asset_specs = load_asset_specifications(
-            asset_specs=self.asset_specs,
-            context_path=context.path,
-            data_contract_path=self.data_contract_path,
-        )
+        # resolved_download_path = Path(context.path, self.download_path).absolute()
 
-        @dg.multi_asset(
-            name="yellow_taxi_trip_records", specs=asset_specs, can_subset=True
-        )
-        def _asset(context: dg.AssetExecutionContext):
-            selected = context.selected_asset_keys or {spec.key for spec in asset_specs}
-
-            self.execute(context, selected, resolved_download_path)
-
-            context.log.info(
-                f"context.selected_asset_keys: {context.selected_asset_keys}"
+        def create_asset_fn(asset_spec: dg.AssetSpec) -> dg.AssetsDefinition:
+            asset_name = asset_spec.key.path[0]
+            combined_asset_spec = combine_asset_specs(
+                asset_name, asset_spec, context.path
             )
 
-        asset_checks = load_asset_checks(
-            asset_specs=self.asset_specs,
-            context_path=context.path,
-            data_contract_path=self.data_contract_path,
-        )
+            @dg.asset(
+                name=asset_name,
+                deps=asset_spec.deps,
+                description=combined_asset_spec.description,
+                metadata=combined_asset_spec.metadata,
+                group_name=combined_asset_spec.group_name,
+                code_version=combined_asset_spec.code_version,
+                automation_condition=combined_asset_spec.automation_condition,
+                owners=combined_asset_spec.owners,
+                tags=combined_asset_spec.tags,
+                kinds=combined_asset_spec.kinds,
+                partitions_def=combined_asset_spec.partitions_def,
+            )
+            def _asset(context: dg.AssetExecutionContext) -> dg.MaterializeResult:
+                context.log.info(f"Asset: {asset_name}")
 
-        # Add definition construction logic here.
+                return dg.MaterializeResult()
+
+            return _asset
+
+        def create_asset_check_fn(
+            check_spec,
+        ):  #  AssetCheckSpecConfig) -> dg.AssetChecksDefinition:
+            @dg.asset_check(
+                name=check_spec.name,
+                asset=check_spec.asset_key,
+                additional_deps=check_spec.additional_deps,
+                description=check_spec.description,
+                blocking=check_spec.blocking,
+                metadata=check_spec.metadata,
+                automation_condition=check_spec.automation_condition,
+            )
+            def _check() -> dg.AssetCheckResult:
+                return dg.AssetCheckResult(passed=True)
+
+            return _check
+
+        asset_defs = []
+        for asset_spec in self.asset_specs:
+            asset_defs.append(create_asset_fn(asset_spec))
+
+        asset_check_defs = []
+        for check in self.checks:
+            asset_check_defs.append(create_asset_check_fn(check))
+
         return dg.Definitions(
-            assets=[_asset],
-            asset_checks=[asset_checks],
+            assets=asset_defs,
+            asset_checks=asset_check_defs,
         )
 
     def execute(
         self,
         context: dg.AssetExecutionContext,
-        selected,
         resolved_download_path: Path,
     ) -> None:
         resolved_download_path.mkdir(parents=True, exist_ok=True)

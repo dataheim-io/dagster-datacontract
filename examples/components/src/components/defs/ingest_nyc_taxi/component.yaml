@@ -2,7 +2,7 @@ type: components.lib.IngestParquetFromAPI
 
 attributes:
   download_path: ./data
-  data_contract_path: datacontract.yml
+  #data_contract_path: datacontract.yml
   asset_specs:
     - key: yellow_taxi_trip_records
       description: Output of running a script
@@ -14,3 +14,7 @@ attributes:
       - yellow_taxi_trip_records
       metadata:
         datacontract/path: datacontract2.yml
+  checks:
+    - name: todo
+      asset: yellow_taxi_trip_records
+
