@@ -15,7 +15,7 @@ uv sync --group dev
 The example can be started with:
 
 ```shell
-dagster dev -f example/assets.py
+dagster dev -f examples/simple/assets.py
 ```
 
 Now access the Dagster UI locally at [http://localhost:3000/](http://localhost:3000/).
