@@ -8,5 +8,3 @@ attributes:
       description: Output of running a script
       metadata:
         datacontract/path: datacontract.yml
-  asset_check_specs:
-    - name: my_asset_check

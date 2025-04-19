@@ -2,6 +2,7 @@ from collections.abc import Generator, Sequence
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 import dagster as dg
 from dagster import AssetCheckResult, TableColumnLineage, TableSchema
@@ -25,11 +26,21 @@ class DataContractLoader:
     def __init__(
         self,
         asset_name: str,
-        data_contract: DataContract,
+        data_contract: DataContract | None = None,
+        data_contract_path: str | None = None,
     ):
+        if data_contract is None and data_contract_path is None:
+            raise ValueError(
+                "Either 'data_contract' or 'data_contract_path' must be provided."
+            )
+
         self.asset_name = asset_name
         self.asset_key = dg.AssetKey(path=self.asset_name)
-        self.data_contract = data_contract
+        self.data_contract = (
+            data_contract
+            if data_contract
+            else DataContract(data_contract_file=data_contract_path)
+        )
         self.data_contract_specification = (
             self.data_contract.get_data_contract_specification()
         )
@@ -182,8 +193,9 @@ def load_asset_specifications(
             Path(context_path, data_contract_path).absolute()
         )
 
+        asset_name = asset_spec.key.path[0]
         data_contract = DataContractLoader(
-            asset_name=asset_spec.key.path[0],
+            asset_name=asset_name,
             data_contract=DataContract(
                 data_contract_file=resolved_data_contract_path,
             ),
@@ -194,7 +206,7 @@ def load_asset_specifications(
 
         loaded_asset_specs.append(
             dg.AssetSpec(
-                key=asset_spec.key.path[0],
+                key=asset_name,
                 metadata=asset_spec.metadata,
                 tags={**asset_spec.tags, **data_contract.tags},
                 description=description,
@@ -215,11 +227,25 @@ def load_asset_check_specifications(
     loaded_asset_check_specs = []
 
     for asset_spec in asset_specs:
-        # asset_contract = asset_spec.metadata["datacontract/path"]
-        data_contract_path = data_contract_path  # asset_contract if asset_contract else data_contract_path # TODO
-        resolved_data_contract_path = str(
-            Path(context_path, data_contract_path).absolute()
-        )
+        asset_contract = asset_spec.metadata["datacontract/path"]
+        if isinstance(asset_contract, dg.UrlMetadataValue):
+            asset_contract = asset_spec.metadata["datacontract/path"].url
+
+        data_contract_path = asset_contract if asset_contract else data_contract_path
+        print(data_contract_path)
+
+        parsed = urlparse(data_contract_path)
+        if parsed.scheme == "file":
+            path = Path(parsed.path)
+        else:
+            path = Path(data_contract_path)
+
+        if path.is_absolute():
+            resolved_data_contract_path = str(path)
+        else:
+            resolved_data_contract_path = str(
+                Path(context_path, data_contract_path).absolute()
+            )
 
         asset_name = asset_spec.key.path[0]
         data_contract = DataContractLoader(
