@@ -2,7 +2,6 @@ from datetime import timedelta
 from typing import Any
 
 import dagster as dg
-from dagster import TableColumnLineage, TableSchema
 from datacontract.data_contract import DataContract
 from datacontract.model.run import ResultEnum
 from loguru import logger
@@ -23,11 +22,21 @@ class DataContractLoader:
     def __init__(
         self,
         asset_name: str,
-        data_contract: DataContract,
+        data_contract: DataContract | None = None,
+        data_contract_path: str | None = None,
     ):
+        if data_contract is None and data_contract_path is None:
+            raise ValueError(
+                "Either 'data_contract' or 'data_contract_path' must be provided."
+            )
+
         self.asset_name = asset_name
         self.asset_key = dg.AssetKey(path=self.asset_name)
-        self.data_contract = data_contract
+        self.data_contract = (
+            data_contract
+            if data_contract
+            else DataContract(data_contract_file=data_contract_path)
+        )
         self.data_contract_specification = (
             self.data_contract.get_data_contract_specification()
         )
@@ -40,10 +49,18 @@ class DataContractLoader:
         self.owner = get_owner(self.data_contract_specification)
         self.version = self._load_version()
         self.cron_schedule = self._load_cron_schedule()
+        self.asset_spec = dg.AssetSpec(
+            key=asset_name,
+            description=self.description,
+            metadata=self.metadata,
+            code_version=self.version,
+            owners=self.owner,
+            tags=self.tags,
+        )
 
     def _load_metadata(
         self,
-    ) -> dict[str, TableColumnLineage | TableSchema | Any] | None:
+    ) -> dict[str, dg.TableColumnLineage | dg.TableSchema | Any] | None:
         metadata = (
             {
                 "datacontract/path": dg.MetadataValue.url(
@@ -56,19 +73,24 @@ class DataContractLoader:
         columns = []
         deps_by_column = {}
 
-        fields = self.data_contract_specification.models.get(self.asset_name).fields
+        try:
+            fields = self.data_contract_specification.models.get(self.asset_name).fields
 
-        for column_name, column_field in fields.items():
-            table_column = get_table_column(column_name, column_field)
-            columns.append(table_column)
+            for column_name, column_field in fields.items():
+                table_column = get_table_column(column_name, column_field)
+                columns.append(table_column)
 
-            table_column_lineage = get_column_lineage(column_field)
-            deps_by_column[column_name] = table_column_lineage
+                table_column_lineage = get_column_lineage(column_field)
+                deps_by_column[column_name] = table_column_lineage
 
-        metadata["dagster/column_schema"] = dg.TableSchema(columns=columns)
-        metadata["dagster/column_lineage"] = dg.TableColumnLineage(
-            deps_by_column=deps_by_column
-        )
+            metadata["dagster/column_schema"] = dg.TableSchema(columns=columns)
+            metadata["dagster/column_lineage"] = dg.TableColumnLineage(
+                deps_by_column=deps_by_column
+            )
+        except AttributeError as e:
+            logger.warning(
+                f"No field named {self.asset_name} found in data contract.\n{e}"
+            )
 
         server_information = get_server_information(
             self.data_contract_specification,
