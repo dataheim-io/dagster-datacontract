@@ -1,6 +1,6 @@
 [project]
 name = "dagster-datacontract"
-version = "0.4.0"
+version = "0.4.1"
 description = "Load metadata and asset check spesifications from data contracts."
 authors = [
     { name = "Fredrik Bakken", email = "fredrik@dataheim.io" }
