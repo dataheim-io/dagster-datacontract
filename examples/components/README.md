@@ -7,6 +7,7 @@ This directory contains an example for how to leverage the capabilities in `dags
 Make sure to set up the example subproject:
 
 ```shell
+cd examples/components
 uv venv
 source .venv/bin/activate
 uv sync
@@ -17,26 +18,8 @@ uv sync
 The example can be started with:
 
 ```shell
+cd examples/components
 dg dev
 ```
 
 Now access the Dagster UI locally at [http://localhost:3000/](http://localhost:3000/).
-
-## TODO
-
-```shell
-uv add dagster-dg
-
-dg init components
-dg dev
-
-dg scaffold component-type IngestParquetFromAPI
-```
-
-```shell
-uv venv
-source .venv/bin/activate
-uv sync
-
-dg dev
-```
