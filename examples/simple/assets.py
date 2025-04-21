@@ -12,7 +12,7 @@ asset_name = "yellow_taxi_trip_records"
 data_contract = DataContractLoader(
     asset_name=asset_name,
     data_contract=DataContract(
-        data_contract_file="./example/datacontract.yml",
+        data_contract_file="./examples/simple/datacontract.yml",
         server="production",
     ),
 )
@@ -29,7 +29,7 @@ data_contract = DataContractLoader(
 def yellow_taxi_trip_records(
     context: dg.AssetExecutionContext,
 ) -> None:
-    download_path = "./example/data"
+    download_path = "./examples/simple/data"
     Path(download_path).mkdir(parents=True, exist_ok=True)
 
     url = "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2025-01.parquet"
