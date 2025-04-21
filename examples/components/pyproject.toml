@@ -28,4 +28,7 @@ directory_type = "project"
 
 [tool.dg.project]
 root_module = "components"
-python_environment = "persistent_uv"
+
+[tool.dg.project.python_environment]
+uv_managed = true
+
