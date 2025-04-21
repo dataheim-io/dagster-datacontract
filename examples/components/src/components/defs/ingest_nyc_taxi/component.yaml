@@ -1,0 +1,18 @@
+type: components.lib.IngestParquetFromAPI
+
+attributes:
+  download_path: ./data
+  asset_specs:
+    - key: yellow_tripdata
+      metadata:
+        datacontract/path: datacontract-yellow_trips.yml
+        datacontract/server: "{{ env('SERVER') }}"
+    - key: green_tripdata
+      description: "Ingest green cab data."
+      metadata:
+        datacontract/path: datacontract-green_trips.yml
+        datacontract/server: "{{ env('SERVER') }}"
+      code_version: "code-1"
+      owners: ["team:Research"]
+      tags:
+        mvp: proof-of-concept
