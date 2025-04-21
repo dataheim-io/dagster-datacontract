@@ -11,9 +11,9 @@ from dagster.components import (
     Resolvable,
     ResolvedAssetSpec,
 )
-from dagster.components.resolved.core_models import ResolvedAssetCheckSpec
+from datacontract.data_contract import DataContract
 
-from dagster_datacontract.specifications import combine_asset_specs
+from dagster_datacontract import DataContractLoader
 
 
 @dataclass
@@ -25,69 +25,61 @@ class IngestParquetFromAPI(Component, Resolvable):
     the Dagster Component assets.
 
     By default, it can be loaded with specifying the
-    `datacontract/path` metadata value within the asset_specs.
+    `datacontract/path`-metadata within the asset_specs.
     """
 
     download_path: str
     asset_specs: Sequence[ResolvedAssetSpec]
-    checks: Sequence[ResolvedAssetCheckSpec]
-
-    def get_check_specs(self) -> Sequence[dg.AssetCheckSpec]:
-        return [check.to_dagster() for check in self.checks]
 
     def build_defs(self, context: ComponentLoadContext) -> dg.Definitions:
-        # resolved_download_path = Path(context.path, self.download_path).absolute()
+        resolved_download_path = Path(context.path, self.download_path).absolute()
 
-        def create_asset_fn(asset_spec: dg.AssetSpec) -> dg.AssetsDefinition:
-            asset_name = asset_spec.key.path[0]
-            combined_asset_spec = combine_asset_specs(
-                asset_name, asset_spec, context.path
-            )
-
+        def create_asset_fn(
+            asset_name: str, asset_spec: dg.AssetSpec
+        ) -> dg.AssetsDefinition:
             @dg.asset(
                 name=asset_name,
                 deps=asset_spec.deps,
-                description=combined_asset_spec.description,
-                metadata=combined_asset_spec.metadata,
-                group_name=combined_asset_spec.group_name,
-                code_version=combined_asset_spec.code_version,
-                automation_condition=combined_asset_spec.automation_condition,
-                owners=combined_asset_spec.owners,
-                tags=combined_asset_spec.tags,
-                kinds=combined_asset_spec.kinds,
-                partitions_def=combined_asset_spec.partitions_def,
+                description=asset_spec.description,
+                metadata=asset_spec.metadata,
+                group_name=asset_spec.group_name,
+                code_version=asset_spec.code_version,
+                automation_condition=asset_spec.automation_condition,
+                owners=asset_spec.owners,
+                tags=asset_spec.tags,
+                kinds=asset_spec.kinds,
+                partitions_def=asset_spec.partitions_def,
             )
-            def _asset(context: dg.AssetExecutionContext) -> dg.MaterializeResult:
-                context.log.info(f"Asset: {asset_name}")
-
-                return dg.MaterializeResult()
+            def _asset(context: dg.AssetExecutionContext) -> None:
+                self.execute(context, resolved_download_path, asset_name)
 
             return _asset
 
-        def create_asset_check_fn(
-            check_spec,
-        ):  #  AssetCheckSpecConfig) -> dg.AssetChecksDefinition:
-            @dg.asset_check(
-                name=check_spec.name,
-                asset=check_spec.asset_key,
-                additional_deps=check_spec.additional_deps,
-                description=check_spec.description,
-                blocking=check_spec.blocking,
-                metadata=check_spec.metadata,
-                automation_condition=check_spec.automation_condition,
-            )
-            def _check() -> dg.AssetCheckResult:
-                return dg.AssetCheckResult(passed=True)
-
-            return _check
-
         asset_defs = []
-        for asset_spec in self.asset_specs:
-            asset_defs.append(create_asset_fn(asset_spec))
-
         asset_check_defs = []
-        for check in self.checks:
-            asset_check_defs.append(create_asset_check_fn(check))
+
+        for asset_spec in self.asset_specs:
+            asset_name = asset_spec.key.path[0]
+            data_contract_path = asset_spec.metadata.get("datacontract/path")
+            data_contract_server = asset_spec.metadata.get("datacontract/server")
+
+            if data_contract_path and data_contract_server:
+                resolved_data_contract_path = str(
+                    Path(context.path, data_contract_path)
+                )
+
+                data_contract_loader = DataContractLoader(
+                    asset_name=asset_name,
+                    data_contract=DataContract(
+                        data_contract_file=resolved_data_contract_path,
+                        server=data_contract_server,
+                    ),
+                )
+
+                asset_spec = data_contract_loader.combine_asset_specs(asset_spec)
+                asset_check_defs.append(data_contract_loader.load_data_quality_checks())
+
+            asset_defs.append(create_asset_fn(asset_name, asset_spec))
 
         return dg.Definitions(
             assets=asset_defs,
@@ -98,13 +90,14 @@ class IngestParquetFromAPI(Component, Resolvable):
         self,
         context: dg.AssetExecutionContext,
         resolved_download_path: Path,
+        asset_name: str,
     ) -> None:
         resolved_download_path.mkdir(parents=True, exist_ok=True)
 
-        url = "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2025-01.parquet"
+        url = f"https://d37ci6vzurychx.cloudfront.net/trip-data/{asset_name}_2025-01.parquet"
         response = requests.get(url=url)
 
-        file_path = f"{resolved_download_path}/yellow_tripdata_2025-01.parquet"
+        file_path = f"{resolved_download_path}/{asset_name}_2025-01.parquet"
         context.log.info(f"Reading data from '{url}' and writing to '{file_path}'.")
         with open(file_path, "wb") as f:
             f.write(response.content)

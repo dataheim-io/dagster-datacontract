@@ -15,7 +15,7 @@ from dagster_datacontract.metadata import (
 )
 from dagster_datacontract.owners import get_owner
 from dagster_datacontract.tags import get_tags
-from dagster_datacontract.utils import normalize_path
+from dagster_datacontract.utils import combine_parts, normalize_path
 
 
 class DataContractLoader:
@@ -180,3 +180,55 @@ class DataContractLoader:
         )
 
         return freshness_checks
+
+    def combine_asset_specs(
+        self,
+        asset_spec: dg.AssetSpec,
+    ) -> dg.AssetSpec:
+        """Merge the given AssetSpec with the current object's attributes to produce a new AssetSpec.
+
+        This method combines metadata, descriptions, code versions, owners, and tags from the
+        provided `asset_spec` and the current instance. Preference is generally given to the
+        current instance's values where appropriate. Fields like dependencies, skippability,
+        group name, automation condition, kinds, and partition definitions are taken directly
+        from the input `asset_spec`.
+
+        Args:
+            asset_spec (dg.AssetSpec): The base asset specification to merge with the current one.
+
+        Returns:
+            dg.AssetSpec: A new AssetSpec instance containing the combined data.
+
+        Notes:
+            - Descriptions are joined with double newlines (`"\n\n"`).
+            - Code versions are joined with an underscore (`"_"`).
+            - Owners are concatenated.
+            - Metadata and tags are merged with the current instance taking precedence.
+        """
+        description = combine_parts(
+            [asset_spec.description, self.description], delimiter="\n\n"
+        )
+        metadata = {
+            **asset_spec.metadata,
+            **self.metadata,
+        }
+        code_version = combine_parts(
+            [asset_spec.code_version, self.version], delimiter="_"
+        )
+        owners = list(asset_spec.owners) + self.owner
+        tags = {**asset_spec.tags, **self.tags}
+
+        return dg.AssetSpec(
+            key=self.asset_name,
+            deps=asset_spec.deps,
+            description=description,
+            metadata=metadata,
+            skippable=asset_spec.skippable,
+            group_name=asset_spec.group_name,
+            code_version=code_version,
+            automation_condition=asset_spec.automation_condition,
+            owners=owners,
+            tags=tags,
+            kinds=asset_spec.kinds,
+            partitions_def=asset_spec.partitions_def,
+        )

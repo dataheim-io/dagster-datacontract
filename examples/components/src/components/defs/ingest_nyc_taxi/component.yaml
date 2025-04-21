@@ -2,19 +2,17 @@ type: components.lib.IngestParquetFromAPI
 
 attributes:
   download_path: ./data
-  #data_contract_path: datacontract.yml
   asset_specs:
-    - key: yellow_taxi_trip_records
-      description: Output of running a script
+    - key: yellow_tripdata
       metadata:
-        datacontract/path: datacontract.yml
-    - key: yellow_taxi_trip_records2
-      description: Output of running a script
-      deps:
-      - yellow_taxi_trip_records
+        datacontract/path: datacontract-yellow_trips.yml
+        datacontract/server: "{{ env('SERVER') }}"
+    - key: green_tripdata
+      description: "Ingest green cab data."
       metadata:
-        datacontract/path: datacontract2.yml
-  checks:
-    - name: todo
-      asset: yellow_taxi_trip_records
-
+        datacontract/path: datacontract-green_trips.yml
+        datacontract/server: "{{ env('SERVER') }}"
+      code_version: "code-1"
+      owners: ["team:Research"]
+      tags:
+        mvp: proof-of-concept

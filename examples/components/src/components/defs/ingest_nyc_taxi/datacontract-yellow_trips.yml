@@ -3,7 +3,7 @@ id: demo
 info:
   title: Demo Contract
   version: 1.0.0
-  owner: Finance
+  owner: Department of Transportation
   description: >
     This data contract defines the schema and metadata for NYC Yellow Taxi trip records,
     including pickup/drop-off timestamps, locations, fare components, and passenger information.
@@ -14,12 +14,12 @@ info:
 servers:
   production:
     type: local
-    path: ./example/data/yellow_tripdata_2025-01.parquet
+    path: ./src/components/defs/ingest_nyc_taxi/data/yellow_tripdata_2025-01.parquet
     format: parquet
 
 models:
-  yellow_taxi_trip_records2:
-    title: TODO.
+  yellow_tripdata:
+    title: "NYC Yellow Taxi Trip Data"
     description: "Trip records for NYC yellow taxis, including pickup and drop-off details, passenger and fare information, and associated surcharges."
     fields:
       VendorID:
