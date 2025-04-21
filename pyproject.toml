@@ -9,8 +9,8 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "dagster>=1.10.10",
-    "dagster-dg>=0.26.10.post1",
-    "datacontract-cli>=0.10.23",
+    "dagster-dg>=0.26.11",
+    "datacontract-cli>=0.10.24",
     "loguru>=0.7.3",
 ]
 
@@ -19,7 +19,7 @@ dev = [
     "dagster-webserver>=1.10.10",
     "polars>=1.27.1",
     "pre-commit>=4.2.0",
-    "ruff>=0.11.5",
+    "ruff>=0.11.6",
 ]
 
 [build-system]
