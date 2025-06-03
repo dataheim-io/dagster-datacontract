@@ -9,10 +9,11 @@ from datacontract.data_contract import DataContract
 from dagster_datacontract import DataContractLoader
 
 asset_name = "yellow_taxi_trip_records"
+examples_path = Path(__file__).resolve().parent.parent
 data_contract = DataContractLoader(
     asset_name=asset_name,
     data_contract=DataContract(
-        data_contract_file="./examples/simple/datacontract.yml",
+        data_contract_file=str(examples_path / "datacontracts" / "datacontract.yml"),
         server="production",
     ),
 )
@@ -29,7 +30,7 @@ data_contract = DataContractLoader(
 def yellow_taxi_trip_records(
     context: dg.AssetExecutionContext,
 ) -> None:
-    download_path = "./examples/simple/data"
+    download_path = examples_path.parent.parent / "data"
     Path(download_path).mkdir(parents=True, exist_ok=True)
 
     url = "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2025-01.parquet"

@@ -1,0 +1,37 @@
+[project]
+name = "examples"
+requires-python = ">=3.10,<3.13"
+version = "0.1.0"
+dependencies = [
+    "dagster==1.10.18",
+    "dagster_datacontract",
+    "datacontract-cli>=0.10.24",
+    "loguru>=0.7.3",
+    "polars>=1.30.0",
+]
+
+[project.entry-points]
+"dagster_dg_cli.plugin" = { examples = "examples.components"}
+
+[dependency-groups]
+dev = [
+    "dagster-webserver",
+    "dagster-dg-cli[local]",
+]
+
+[tool.uv.sources]
+dagster_datacontract = { path = ".." }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.dg]
+directory_type = "project"
+
+[tool.dg.project]
+root_module = "examples"
+
+
+[tool.dg.project.python_environment]
+uv_managed = true

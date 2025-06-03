@@ -14,7 +14,7 @@ info:
 servers:
   production:
     type: local
-    path: ./examples/simple/data/yellow_tripdata_2025-01.parquet
+    path: ./data/yellow_tripdata_2025-01.parquet
     format: parquet
 
 models:

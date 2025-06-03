@@ -10,9 +10,9 @@ Install `dagster-datacontract` using [`uv`](https://github.com/astral-sh/uv):
 uv add dagster-datacontract
 ```
 
-## Simple Example
+## Example
 
-The following example can be found inside the [examples/simple](https://github.com/dataheim-io/dagster-datacontract/tree/main/examples/simple)-directory:
+The following example can be found inside the [examples](https://github.com/dataheim-io/dagster-datacontract/tree/main/examples)-directory:
 
 ```python
 from datetime import timedelta
@@ -26,10 +26,11 @@ from datacontract.data_contract import DataContract
 from dagster_datacontract import DataContractLoader
 
 asset_name = "yellow_taxi_trip_records"
+examples_path = Path(__file__).resolve().parent.parent
 data_contract = DataContractLoader(
     asset_name=asset_name,
     data_contract=DataContract(
-        data_contract_file="./example/datacontract.yml",
+        data_contract_file=str(examples_path / "datacontracts" / "datacontract.yml"),
         server="production",
     ),
 )
@@ -46,7 +47,7 @@ data_contract = DataContractLoader(
 def yellow_taxi_trip_records(
     context: dg.AssetExecutionContext,
 ) -> None:
-    download_path = "./example/data"
+    download_path = examples_path.parent.parent / "data"
     Path(download_path).mkdir(parents=True, exist_ok=True)
 
     url = "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2025-01.parquet"
