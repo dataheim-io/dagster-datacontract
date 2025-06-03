@@ -1,6 +1,6 @@
 [project]
 name = "dagster-datacontract"
-version = "0.4.1"
+version = "0.5.0"
 description = "Load metadata and asset check spesifications from data contracts."
 authors = [
     { name = "Fredrik Bakken", email = "fredrik@dataheim.io" }
@@ -9,13 +9,13 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "dagster>=1.10.10",
-    "dagster-dg>=0.26.11",
     "datacontract-cli>=0.10.24",
     "loguru>=0.7.3",
 ]
 
 [dependency-groups]
 dev = [
+    "dagster-dg-cli[local]>=1.10.18",
     "dagster-webserver>=1.10.10",
     "polars>=1.27.1",
     "pre-commit>=4.2.0",
@@ -25,6 +25,10 @@ dev = [
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["dagster_datacontract"]
+exclude = ["examples"]
 
 [tool.ruff.lint]
 extend-select = [
