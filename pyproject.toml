@@ -27,8 +27,9 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["dagster_datacontract"]
-exclude = ["examples"]
+where = ["."]
+include = ["dagster_datacontract*"]
+exclude = ["examples*", "tests*"]
 
 [tool.ruff.lint]
 extend-select = [

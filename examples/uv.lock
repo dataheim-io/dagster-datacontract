@@ -423,6 +423,32 @@ wheels = [
 ]
 
 [[package]]
+name = "dagster-datacontract"
+version = "0.5.0"
+source = { directory = "../" }
+dependencies = [
+    { name = "dagster" },
+    { name = "datacontract-cli" },
+    { name = "loguru" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "dagster", specifier = ">=1.10.10" },
+    { name = "datacontract-cli", specifier = ">=0.10.24" },
+    { name = "loguru", specifier = ">=0.7.3" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "dagster-dg-cli", extras = ["local"], specifier = ">=1.10.18" },
+    { name = "dagster-webserver", specifier = ">=1.10.10" },
+    { name = "polars", specifier = ">=1.27.1" },
+    { name = "pre-commit", specifier = ">=4.2.0" },
+    { name = "ruff", specifier = ">=0.11.6" },
+]
+
+[[package]]
 name = "dagster-dg-cli"
 version = "1.10.18"
 source = { registry = "https://pypi.org/simple" }
@@ -627,6 +653,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "dagster" },
+    { name = "dagster-datacontract" },
     { name = "datacontract-cli" },
     { name = "loguru" },
     { name = "polars" },
@@ -641,6 +668,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "dagster", specifier = "==1.10.18" },
+    { name = "dagster-datacontract", directory = "../" },
     { name = "datacontract-cli", specifier = ">=0.10.24" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "polars", specifier = ">=1.30.0" },
